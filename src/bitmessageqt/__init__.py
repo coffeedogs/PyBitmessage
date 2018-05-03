@@ -67,18 +67,6 @@ except ImportError:
 
 
 def change_translation(newlocale):
-    global qmytranslator, qsystranslator
-    try:
-        if not qmytranslator.isEmpty():
-            QtGui.QApplication.removeTranslator(qmytranslator)
-    except:
-        pass
-    try:
-        if not qsystranslator.isEmpty():
-            QtGui.QApplication.removeTranslator(qsystranslator)
-    except:
-        pass
-
     qmytranslator = QtCore.QTranslator()
     translationpath = os.path.join (paths.codePath(), 'translations', 'bitmessage_' + newlocale)
     qmytranslator.load(translationpath)
@@ -395,17 +383,16 @@ class MyForm(settingsmixin.SMainWindow):
             treeWidget.header().setSortIndicator(
                 0, QtCore.Qt.AscendingOrder)
         # init dictionary
-        
+
         db = getSortedSubscriptions(True)
         for address in db:
             for folder in folders:
                 if not folder in db[address]:
                     db[address][folder] = {}
-            
+
         if treeWidget.isSortingEnabled():
             treeWidget.setSortingEnabled(False)
 
-        widgets = {}
         i = 0
         while i < treeWidget.topLevelItemCount():
             widget = treeWidget.topLevelItem(i)
@@ -413,7 +400,7 @@ class MyForm(settingsmixin.SMainWindow):
                 toAddress = widget.address
             else:
                 toAddress = None
-            
+
             if not toAddress in db:
                 treeWidget.takeTopLevelItem(i)
                 # no increment
@@ -444,7 +431,7 @@ class MyForm(settingsmixin.SMainWindow):
             widget.setUnreadCount(unread)
             db.pop(toAddress, None)
             i += 1
-        
+
         i = 0
         for toAddress in db:
             widget = Ui_SubscriptionWidget(treeWidget, i, toAddress, db[toAddress]["inbox"]['count'], db[toAddress]["inbox"]['label'], db[toAddress]["inbox"]['enabled'])
@@ -459,7 +446,7 @@ class MyForm(settingsmixin.SMainWindow):
                 j += 1
             widget.setUnreadCount(unread)
             i += 1
-        
+
         treeWidget.setSortingEnabled(True)
 
 
@@ -468,14 +455,14 @@ class MyForm(settingsmixin.SMainWindow):
 
     def rerenderTabTreeChans(self):
         self.rerenderTabTree('chan')
-        
+
     def rerenderTabTree(self, tab):
         if tab == 'messages':
             treeWidget = self.ui.treeWidgetYourIdentities
         elif tab == 'chan':
             treeWidget = self.ui.treeWidgetChans
         folders = Ui_FolderWidget.folderWeight.keys()
-        
+
         # sort ascending when creating
         if treeWidget.topLevelItemCount() == 0:
             treeWidget.header().setSortIndicator(
@@ -483,14 +470,12 @@ class MyForm(settingsmixin.SMainWindow):
         # init dictionary
         db = {}
         enabled = {}
-        
+
         for toAddress in getSortedAccounts():
             isEnabled = BMConfigParser().getboolean(
                 toAddress, 'enabled')
             isChan = BMConfigParser().safeGetBoolean(
                 toAddress, 'chan')
-            isMaillinglist = BMConfigParser().safeGetBoolean(
-                toAddress, 'mailinglist')
 
             if treeWidget == self.ui.treeWidgetYourIdentities:
                 if isChan:
@@ -502,7 +487,7 @@ class MyForm(settingsmixin.SMainWindow):
             db[toAddress] = {}
             for folder in folders:
                 db[toAddress][folder] = 0
-                
+
             enabled[toAddress] = isEnabled
 
         # get number of (unread) messages
@@ -520,10 +505,10 @@ class MyForm(settingsmixin.SMainWindow):
             db[None]["sent"] = 0
             db[None]["trash"] = 0
             enabled[None] = True
-        
+
         if treeWidget.isSortingEnabled():
             treeWidget.setSortingEnabled(False)
-        
+
         widgets = {}
         i = 0
         while i < treeWidget.topLevelItemCount():
@@ -532,7 +517,7 @@ class MyForm(settingsmixin.SMainWindow):
                 toAddress = widget.address
             else:
                 toAddress = None
-            
+
             if not toAddress in db:
                 treeWidget.takeTopLevelItem(i)
                 # no increment
@@ -565,7 +550,7 @@ class MyForm(settingsmixin.SMainWindow):
             widget.setUnreadCount(unread)
             db.pop(toAddress, None)
             i += 1
-        
+
         i = 0
         for toAddress in db:
             widget = Ui_AddressWidget(treeWidget, i, toAddress, db[toAddress]["inbox"], enabled[toAddress])
@@ -580,7 +565,7 @@ class MyForm(settingsmixin.SMainWindow):
                 j += 1
             widget.setUnreadCount(unread)
             i += 1
-        
+
         treeWidget.setSortingEnabled(True)
 
     def __init__(self, parent=None):
@@ -591,7 +576,7 @@ class MyForm(settingsmixin.SMainWindow):
         # Ask the user if we may delete their old version 1 addresses if they
         # have any.
         for addressInKeysFile in getSortedAccounts():
-            status, addressVersionNumber, streamNumber, hash = decodeAddress(
+            status, addressVersionNumber, streamNumber, _ = decodeAddress(
                 addressInKeysFile)
             if addressVersionNumber == 1:
                 displayMsg = _translate(
@@ -622,13 +607,13 @@ class MyForm(settingsmixin.SMainWindow):
 
         # e.g. for editing labels
         self.recurDepth = 0
-        
+
         # switch back to this when replying
         self.replyFromTab = None
 
         # so that quit won't loop
         self.quitAccepted = False
-        
+
         self.init_file_menu()
         self.init_inbox_popup_menu()
         self.init_identities_popup_menu()
@@ -730,7 +715,7 @@ class MyForm(settingsmixin.SMainWindow):
         self.ui.treeWidgetYourIdentities.setIconSize(QtCore.QSize(identicon_size, identicon_size))
         self.ui.treeWidgetSubscriptions.setIconSize(QtCore.QSize(identicon_size, identicon_size))
         self.ui.tableWidgetAddressBook.setIconSize(QtCore.QSize(identicon_size, identicon_size))
-        
+
         self.UISignalThread = UISignaler.get()
         QtCore.QObject.connect(self.UISignalThread, QtCore.SIGNAL(
             "writeNewAddressToTable(PyQt_PyObject,PyQt_PyObject,PyQt_PyObject)"), self.writeNewAddressToTable)
@@ -784,7 +769,7 @@ class MyForm(settingsmixin.SMainWindow):
 
         self.rerenderComboBoxSendFrom()
         self.rerenderComboBoxSendFromBroadcast()
-        
+
         # Put the TTL slider in the correct spot
         TTL = BMConfigParser().getint('bitmessagesettings', 'ttl')
         if TTL < 3600: # an hour
@@ -793,7 +778,7 @@ class MyForm(settingsmixin.SMainWindow):
             TTL = 28*24*60*60
         self.ui.horizontalSliderTTL.setSliderPosition((TTL - 3600) ** (1/3.199))
         self.updateHumanFriendlyTTLDescription(TTL)
-        
+
         QtCore.QObject.connect(self.ui.horizontalSliderTTL, QtCore.SIGNAL(
             "valueChanged(int)"), self.updateTTL)
 
@@ -816,7 +801,7 @@ class MyForm(settingsmixin.SMainWindow):
         self.updateHumanFriendlyTTLDescription(TTL)
         BMConfigParser().set('bitmessagesettings', 'ttl', str(TTL))
         BMConfigParser().save()
-        
+
     def updateHumanFriendlyTTLDescription(self, TTL):
         numberOfHours = int(round(TTL / (60*60)))
         font = QtGui.QFont()
@@ -870,18 +855,6 @@ class MyForm(settingsmixin.SMainWindow):
             'bitmessagesettings', 'showtraynotifications',
             str(not self.actionQuiet.isChecked())
         )
-
-    # application indicator show or hide
-    """# application indicator show or hide
-    def appIndicatorShowBitmessage(self):
-        #if self.actionShow == None:
-        #    return
-        print self.actionShow.isChecked()
-        if not self.actionShow.isChecked():
-            self.hide()
-            #self.setWindowState(self.windowState() & QtCore.Qt.WindowMinimized)
-        else:
-            self.appIndicatorShowOrHideWindow()"""
 
     # Show the program window and select inbox tab
     def appIndicatorInbox(self, item=None):
@@ -961,7 +934,7 @@ class MyForm(settingsmixin.SMainWindow):
                 for col in (0, 1, 2):
                     related.item(rrow, col).setUnread(not status)
 
-    def propagateUnreadCount(self, address = None, folder = "inbox", widget = None, type = 1):
+    def propagateUnreadCount(self, address=None, folder="inbox", widget=None):
         widgets = [self.ui.treeWidgetYourIdentities, self.ui.treeWidgetSubscriptions, self.ui.treeWidgetChans]
         queryReturn = sqlQuery("SELECT toaddress, folder, COUNT(msgid) AS cnt FROM inbox WHERE read = 0 GROUP BY toaddress, folder")
         totalUnread = {}
@@ -980,7 +953,7 @@ class MyForm(settingsmixin.SMainWindow):
         for row in queryReturn:
             broadcastsUnread[row[0]] = {}
             broadcastsUnread[row[0]][row[1]] = row[2]
-        
+
         for treeWidget in widgets:
             root = treeWidget.invisibleRootItem()
             for i in range(root.childCount()):
@@ -1019,8 +992,8 @@ class MyForm(settingsmixin.SMainWindow):
         if sortingEnabled:
             tableWidget.setSortingEnabled(False)
         tableWidget.insertRow(0)
-        for i in range(len(items)):
-            tableWidget.setItem(0, i, items[i])
+        for i, item in enumerate(items):
+            tableWidget.setItem(0, i, item)
         if sortingEnabled:
             tableWidget.setSortingEnabled(True)
 
@@ -1099,7 +1072,7 @@ class MyForm(settingsmixin.SMainWindow):
         if acct is None:
             acct = BMAccount(fromAddress)
         acct.parseMessage(toAddress, fromAddress, subject, "")
-            
+
         items = []
         #to
         MessageList_AddressWidget(items, toAddress, unicode(acct.toLabel, 'utf-8'), not read)
@@ -1175,7 +1148,7 @@ class MyForm(settingsmixin.SMainWindow):
         tableWidget.setRowCount(0)
 
         queryreturn = helper_search.search_sql(xAddress, account, folder, where, what, unreadOnly)
-        
+
         for row in queryreturn:
             msgfolder, msgid, toAddress, fromAddress, subject, received, read = row
             self.addMessageListItemInbox(tableWidget, msgfolder, msgid, toAddress, fromAddress, subject, received, read)
@@ -1738,7 +1711,7 @@ class MyForm(settingsmixin.SMainWindow):
                         sent.item(i, 3).setText(textToDisplay)
 
     def updateSentItemStatusByAckdata(self, ackdata, textToDisplay):
-        if type(ackdata) is str:
+        if isinstance(ackdata, str):
             ackdata = QtCore.QByteArray(ackdata)
         for sent in [self.ui.tableWidgetInbox, self.ui.tableWidgetInboxSubscriptions, self.ui.tableWidgetInboxChans]:
             treeWidget = self.widgetConvert(sent)
@@ -1773,7 +1746,11 @@ class MyForm(settingsmixin.SMainWindow):
                     self.updateStatusBar(
                         _translate("MainWindow", "Message trashed"))
                     treeWidget = self.widgetConvert(inbox)
-                    self.propagateUnreadCount(inbox.item(i, 1 if inbox.item(i, 1).type == AccountMixin.SUBSCRIPTION else 0).data(QtCore.Qt.UserRole), self.getCurrentFolder(treeWidget), treeWidget, 0)
+                    self.propagateUnreadCount(
+                        inbox.item(i, 1 if inbox.item(i, 1).type == AccountMixin.SUBSCRIPTION else 0).data(QtCore.Qt.UserRole),
+                        self.getCurrentFolder(treeWidget),
+                        treeWidget,
+                    )
                     inbox.removeRow(i)
                     break
 
@@ -1803,11 +1780,11 @@ class MyForm(settingsmixin.SMainWindow):
                 messagelist.item(i, 0).setLabel()
 
     def rerenderAddressBook(self):
-        def addRow (address, label, type):
+        def addRow (address, label, item_type):
             self.ui.tableWidgetAddressBook.insertRow(0)
-            newItem = Ui_AddressBookWidgetItemLabel(address, unicode(label, 'utf-8'), type)
+            newItem = Ui_AddressBookWidgetItemLabel(address, unicode(label, 'utf-8'), item_type)
             self.ui.tableWidgetAddressBook.setItem(0, 0, newItem)
-            newItem = Ui_AddressBookWidgetItemAddress(address, unicode(label, 'utf-8'), type)
+            newItem = Ui_AddressBookWidgetItemAddress(address, unicode(label, 'utf-8'), item_type)
             self.ui.tableWidgetAddressBook.setItem(0, 1, newItem)
 
         oldRows = {}
@@ -1896,13 +1873,11 @@ class MyForm(settingsmixin.SMainWindow):
             subject = str(self.ui.lineEditSubjectBroadcast.text().toUtf8())
             message = str(
                 self.ui.textEditMessageBroadcast.document().toPlainText().toUtf8())
-        """
-        The whole network message must fit in 2^18 bytes.
-        Let's assume 500 bytes of overhead. If someone wants to get that
-        too an exact number you are welcome to but I think that it would
-        be a better use of time to support message continuation so that
-        users can send messages of any length.
-        """
+        # The whole network message must fit in 2^18 bytes.
+        # Let's assume 500 bytes of overhead. If someone wants to get that
+        # too an exact number you are welcome to but I think that it would
+        # be a better use of time to support message continuation so that
+        # users can send messages of any length.
         if len(message) > (2 ** 18 - 500):
             QtGui.QMessageBox.about(
                 self, _translate("MainWindow", "Message too long"),
@@ -1933,7 +1908,7 @@ class MyForm(settingsmixin.SMainWindow):
                             subject = acct.subject
                             toAddress = acct.toAddress
                         else:
-                            if QtGui.QMessageBox.question(self, "Sending an email?", _translate("MainWindow", 
+                            if QtGui.QMessageBox.question(self, "Sending an email?", _translate("MainWindow",
                                 "You are trying to send an email instead of a bitmessage. This requires registering with a gateway. Attempt to register?"),
                                 QtGui.QMessageBox.Yes|QtGui.QMessageBox.No) != QtGui.QMessageBox.Yes:
                                 continue
@@ -2110,17 +2085,17 @@ class MyForm(settingsmixin.SMainWindow):
                 ackdata = genAckPayload(streamNumber, 0)
                 toAddress = str_broadcast_subscribers
                 ripe = ''
-                t = ('', # msgid. We don't know what this will be until the POW is done. 
-                     toAddress, 
-                     ripe, 
-                     fromAddress, 
-                     subject, 
-                     message, 
-                     ackdata, 
+                t = ('', # msgid. We don't know what this will be until the POW is done.
+                     toAddress,
+                     ripe,
+                     fromAddress,
+                     subject,
+                     message,
+                     ackdata,
                      int(time.time()), # sentTime (this will never change)
                      int(time.time()), # lastActionTime
                      0, # sleepTill time. This will get set when the POW gets done.
-                     'broadcastqueued', 
+                     'broadcastqueued',
                      0, # retryNumber
                      'sent', # folder
                      encoding, # encoding type
@@ -2130,7 +2105,7 @@ class MyForm(settingsmixin.SMainWindow):
                     '''INSERT INTO sent VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''', *t)
 
                 toLabel = str_broadcast_subscribers
-                
+
                 self.displayNewSentMessage(
                     toAddress, toLabel, fromAddress, subject, message, ackdata)
 
@@ -2148,7 +2123,7 @@ class MyForm(settingsmixin.SMainWindow):
 
     def click_pushButtonLoadFromAddressBook(self):
         self.ui.tabWidget.setCurrentIndex(5)
-        for i in range(4):
+        for _ in range(4):
             time.sleep(0.1)
             self.statusbar.clearMessage()
             time.sleep(0.1)
@@ -2249,7 +2224,7 @@ class MyForm(settingsmixin.SMainWindow):
                 continue
             elif not helper_search.check_match(toAddress, fromAddress, subject, message, self.getCurrentSearchOption(tab), self.getCurrentSearchLine(tab)):
                 continue
-            
+
             self.addMessageListItemSent(sent, toAddress, fromAddress, subject, "msgqueued", ackdata, time.time())
             self.getAccountTextedit(acct).setPlainText(unicode(message, 'utf-8', 'replace'))
             sent.setCurrentCell(0, 0)
@@ -2411,11 +2386,11 @@ class MyForm(settingsmixin.SMainWindow):
                 self.settingsDialogInstance.ui.checkBoxUseIdenticons.isChecked()))
             BMConfigParser().set('bitmessagesettings', 'replybelow', str(
                 self.settingsDialogInstance.ui.checkBoxReplyBelow.isChecked()))
-                
+
             lang = str(self.settingsDialogInstance.ui.languageComboBox.itemData(self.settingsDialogInstance.ui.languageComboBox.currentIndex()).toString())
             BMConfigParser().set('bitmessagesettings', 'userlocale', lang)
             change_translation(l10n.getTranslationLanguage())
-            
+
             if int(BMConfigParser().get('bitmessagesettings', 'port')) != int(self.settingsDialogInstance.ui.lineEditTCPPort.text()):
                 if not BMConfigParser().safeGetBoolean('bitmessagesettings', 'dontconnect'):
                     QtGui.QMessageBox.about(self, _translate("MainWindow", "Restart"), _translate(
@@ -2480,7 +2455,7 @@ class MyForm(settingsmixin.SMainWindow):
                 self.settingsDialogInstance.ui.lineEditNamecoinUser.text()))
             BMConfigParser().set('bitmessagesettings', 'namecoinrpcpassword', str(
                 self.settingsDialogInstance.ui.lineEditNamecoinPassword.text()))
-            
+
             # Demanded difficulty tab
             if float(self.settingsDialogInstance.ui.lineEditTotalDifficulty.text()) >= 1:
                 BMConfigParser().set('bitmessagesettings', 'defaultnoncetrialsperbyte', str(int(float(
@@ -2494,7 +2469,7 @@ class MyForm(settingsmixin.SMainWindow):
                 queues.workerQueue.put(('resetPoW', ''))
 
             acceptableDifficultyChanged = False
-            
+
             if float(self.settingsDialogInstance.ui.lineEditMaxAcceptableTotalDifficulty.text()) >= 1 or float(self.settingsDialogInstance.ui.lineEditMaxAcceptableTotalDifficulty.text()) == 0:
                 if BMConfigParser().get('bitmessagesettings','maxacceptablenoncetrialsperbyte') != str(int(float(
                     self.settingsDialogInstance.ui.lineEditMaxAcceptableTotalDifficulty.text()) * defaults.networkDefaultProofOfWorkNonceTrialsPerByte)):
@@ -2510,13 +2485,13 @@ class MyForm(settingsmixin.SMainWindow):
                     BMConfigParser().set('bitmessagesettings', 'maxacceptablepayloadlengthextrabytes', str(int(float(
                         self.settingsDialogInstance.ui.lineEditMaxAcceptableSmallMessageDifficulty.text()) * defaults.networkDefaultPayloadLengthExtraBytes)))
             if acceptableDifficultyChanged:
-                # It might now be possible to send msgs which were previously marked as toodifficult. 
+                # It might now be possible to send msgs which were previously marked as toodifficult.
                 # Let us change them to 'msgqueued'. The singleWorker will try to send them and will again
                 # mark them as toodifficult if the receiver's required difficulty is still higher than
                 # we are willing to do.
                 sqlExecute('''UPDATE sent SET status='msgqueued' WHERE status='toodifficult' ''')
                 queues.workerQueue.put(('sendmessage', ''))
-            
+
             #start:UI setting to stop trying to send messages after X days/months
             # I'm open to changing this UI to something else if someone has a better idea.
             if ((self.settingsDialogInstance.ui.lineEditDays.text()=='') and (self.settingsDialogInstance.ui.lineEditMonths.text()=='')):#We need to handle this special case. Bitmessage has its default behavior. The input is blank/blank
@@ -2717,7 +2692,7 @@ class MyForm(settingsmixin.SMainWindow):
         if getPowType() == "python" and (powQueueSize() > 0 or pendingUpload() > 0):
             reply = QtGui.QMessageBox.question(self, _translate("MainWindow", "Proof of work pending"),
                     _translate("MainWindow", "%n object(s) pending proof of work", None, QtCore.QCoreApplication.CodecForTr, powQueueSize()) + ", " +
-                    _translate("MainWindow", "%n object(s) waiting to be distributed", None, QtCore.QCoreApplication.CodecForTr, pendingUpload()) + "\n\n" + 
+                    _translate("MainWindow", "%n object(s) waiting to be distributed", None, QtCore.QCoreApplication.CodecForTr, pendingUpload()) + "\n\n" +
                     _translate("MainWindow", "Wait until these tasks finish?"),
                     QtGui.QMessageBox.Yes|QtGui.QMessageBox.No|QtGui.QMessageBox.Cancel, QtGui.QMessageBox.Cancel)
             if reply == QtGui.QMessageBox.No:
@@ -2806,7 +2781,7 @@ class MyForm(settingsmixin.SMainWindow):
             self.updateStatusBar(_translate(
                 "MainWindow", "Waiting for objects to be sent... %1%").arg(50))
             maxPendingUpload = max(1, pendingUpload())
-                   
+
             while pendingUpload() > 1:
                 self.updateStatusBar(_translate(
                     "MainWindow",
@@ -2832,9 +2807,8 @@ class MyForm(settingsmixin.SMainWindow):
             QtCore.QEventLoop.AllEvents, 1000
         )
         self.saveSettings()
-        for attr, obj in self.ui.__dict__.iteritems():
-            if hasattr(obj, "__class__") \
-                    and isinstance(obj, settingsmixin.SettingsMixin):
+        for _, obj in self.ui.__dict__.iteritems():
+            if hasattr(obj, "__class__") and isinstance(obj, settingsmixin.SettingsMixin):
                 saveMethod = getattr(obj, "saveSettings", None)
                 if callable(saveMethod):
                     obj.saveSettings()
@@ -2934,8 +2908,8 @@ class MyForm(settingsmixin.SMainWindow):
         #     # performance optimisation
         #     self.propagateUnreadCount(tableWidget.item(currentRow, 1 if tableWidget.item(currentRow, 1).type == AccountMixin.SUBSCRIPTION else 0).data(QtCore.Qt.UserRole), self.getCurrentFolder())
         # else:
-        #     self.propagateUnreadCount(tableWidget.item(currentRow, 1 if tableWidget.item(currentRow, 1).type == AccountMixin.SUBSCRIPTION else 0).data(QtCore.Qt.UserRole), self.getCurrentFolder(), self.getCurrentTreeWidget(), 0)
-        # tableWidget.selectRow(currentRow + 1) 
+        #     self.propagateUnreadCount(tableWidget.item(currentRow, 1 if tableWidget.item(currentRow, 1).type == AccountMixin.SUBSCRIPTION else 0).data(QtCore.Qt.UserRole), self.getCurrentFolder(), self.getCurrentTreeWidget())
+        # tableWidget.selectRow(currentRow + 1)
         # This doesn't de-select the last message if you try to mark it unread, but that doesn't interfere. Might not be necessary.
         # We could also select upwards, but then our problem would be with the topmost message.
         # tableWidget.clearSelection() manages to mark the message as read again.
@@ -2979,18 +2953,18 @@ class MyForm(settingsmixin.SMainWindow):
 
     def on_action_InboxReplyChan(self):
         self.on_action_InboxReply(self.REPLY_TYPE_CHAN)
-    
+
     def on_action_InboxReply(self, replyType = None):
         tableWidget = self.getCurrentMessagelist()
         if not tableWidget:
             return
-        
+
         if replyType is None:
             replyType = self.REPLY_TYPE_SENDER
-        
+
         # save this to return back after reply is done
         self.replyFromTab = self.ui.tabWidget.currentIndex()
-        
+
         currentInboxRow = tableWidget.currentRow()
         toAddressAtCurrentInboxRow = tableWidget.item(
             currentInboxRow, 0).address
@@ -3039,7 +3013,7 @@ class MyForm(settingsmixin.SMainWindow):
             self.ui.lineEditTo.setText(str(acct.fromAddress))
         else:
             self.ui.lineEditTo.setText(tableWidget.item(currentInboxRow, 1).label + " <" + str(acct.fromAddress) + ">")
-        
+
         # If the previous message was to a chan then we should send our reply to the chan rather than to the particular person who sent the message.
         if acct.type == AccountMixin.CHAN and replyType == self.REPLY_TYPE_CHAN:
             logger.debug('original sent to a chan. Setting the to address in the reply to the chan address.')
@@ -3047,9 +3021,9 @@ class MyForm(settingsmixin.SMainWindow):
                 self.ui.lineEditTo.setText(str(toAddressAtCurrentInboxRow))
             else:
                 self.ui.lineEditTo.setText(tableWidget.item(currentInboxRow, 0).label + " <" + str(acct.toAddress) + ">")
-        
+
         self.setSendFromComboBox(toAddressAtCurrentInboxRow)
-        
+
         quotedText = self.quoted_text(unicode(messageAtCurrentInboxRow, 'utf-8', 'replace'))
         widget['message'].setPlainText(quotedText)
         if acct.subject[0:3] in ['Re:', 'RE:']:
@@ -3107,7 +3081,7 @@ class MyForm(settingsmixin.SMainWindow):
     def deleteRowFromMessagelist(self, row = None, inventoryHash = None, ackData = None, messageLists = None):
         if messageLists is None:
             messageLists = (self.ui.tableWidgetInbox, self.ui.tableWidgetInboxChans, self.ui.tableWidgetInboxSubscriptions)
-        elif type(messageLists) not in (list, tuple):
+        elif isinstance(messageLists, (list, tuple)):
             messageLists = (messageLists)
         for messageList in messageLists:
             if row is not None:
@@ -3222,7 +3196,6 @@ class MyForm(settingsmixin.SMainWindow):
     # Send item on the Sent tab to trash
     def on_action_SentTrash(self):
         currentRow = 0
-        unread = False
         tableWidget = self.getCurrentMessagelist()
         if not tableWidget:
             return
@@ -3237,7 +3210,10 @@ class MyForm(settingsmixin.SMainWindow):
             else:
                 sqlExecute('''UPDATE sent SET folder='trash' WHERE ackdata=?''', ackdataToTrash)
             if tableWidget.item(currentRow, 0).unread:
-                self.propagateUnreadCount(tableWidget.item(currentRow, 1 if tableWidget.item(currentRow, 1).type == AccountMixin.SUBSCRIPTION else 0).data(QtCore.Qt.UserRole), folder, self.getCurrentTreeWidget(), -1)
+                self.propagateUnreadCount(
+                    tableWidget.item(currentRow, 1 if tableWidget.item(currentRow, 1).type == AccountMixin.SUBSCRIPTION else 0).data(QtCore.Qt.UserRole),
+                    folder,
+                    self.getCurrentTreeWidget())
             self.getCurrentMessageTextedit().setPlainText("")
             tableWidget.removeRow(currentRow)
             self.updateStatusBar(_translate(
@@ -3359,9 +3335,9 @@ class MyForm(settingsmixin.SMainWindow):
         normal = True
         for row in self.ui.tableWidgetAddressBook.selectedIndexes():
             currentRow = row.row()
-            type = self.ui.tableWidgetAddressBook.item(
+            item_type = self.ui.tableWidgetAddressBook.item(
                 currentRow, 0).type
-            if type != AccountMixin.NORMAL:
+            if item_type != AccountMixin.NORMAL:
                 normal = False
         if normal:
             # only if all selected addressbook items are normal, allow delete
@@ -3496,7 +3472,7 @@ class MyForm(settingsmixin.SMainWindow):
             return messagelistList[currentIndex]
         else:
             return False
-            
+
     def getAccountMessagelist(self, account):
         try:
             if account.type == AccountMixin.CHAN:
@@ -3583,7 +3559,7 @@ class MyForm(settingsmixin.SMainWindow):
             if currentItem:
                 return currentItem
         return False
-    
+
     def getCurrentAccount(self, treeWidget=None):
         currentItem = self.getCurrentItem(treeWidget)
         if currentItem:
@@ -3710,7 +3686,7 @@ class MyForm(settingsmixin.SMainWindow):
 
     def on_action_AddressBookSetAvatar(self):
         self.on_action_SetAvatar(self.ui.tableWidgetAddressBook)
-        
+
     def on_action_SetAvatar(self, thisTableWidget):
         currentRow = thisTableWidget.currentRow()
         addressAtCurrentRow = thisTableWidget.item(
@@ -3723,7 +3699,7 @@ class MyForm(settingsmixin.SMainWindow):
     def setAvatar(self, addressAtCurrentRow):
         if not os.path.exists(state.appdata + 'avatars/'):
             os.makedirs(state.appdata + 'avatars/')
-        hash = hashlib.md5(addBMIfNotPresent(addressAtCurrentRow)).hexdigest()
+        avatarHash = hashlib.md5(addBMIfNotPresent(addressAtCurrentRow)).hexdigest()
         extensions = ['PNG', 'GIF', 'JPG', 'JPEG', 'SVG', 'BMP', 'MNG', 'PBM', 'PGM', 'PPM', 'TIFF', 'XBM', 'XPM', 'TGA']
         # http://pyqt.sourceforge.net/Docs/PyQt4/qimagereader.html#supportedImageFormats
         names = {'BMP':'Windows Bitmap', 'GIF':'Graphic Interchange Format', 'JPG':'Joint Photographic Experts Group', 'JPEG':'Joint Photographic Experts Group', 'MNG':'Multiple-image Network Graphics', 'PNG':'Portable Network Graphics', 'PBM':'Portable Bitmap', 'PGM':'Portable Graymap', 'PPM':'Portable Pixmap', 'TIFF':'Tagged Image File Format', 'XBM':'X11 Bitmap', 'XPM':'X11 Pixmap', 'SVG':'Scalable Vector Graphics', 'TGA':'Targa Image Format'}
@@ -3733,8 +3709,8 @@ class MyForm(settingsmixin.SMainWindow):
         for ext in extensions:
             filters += [ names[ext] + ' (*.' + ext.lower() + ')' ]
             all_images_filter += [ '*.' + ext.lower() ]
-            upper = state.appdata + 'avatars/' + hash + '.' + ext.upper()
-            lower = state.appdata + 'avatars/' + hash + '.' + ext.lower()
+            upper = state.appdata + 'avatars/' + avatarHash + '.' + ext.upper()
+            lower = state.appdata + 'avatars/' + avatarHash + '.' + ext.lower()
             if os.path.isfile(lower):
                 current_files += [lower]
             elif os.path.isfile(upper):
@@ -3746,7 +3722,7 @@ class MyForm(settingsmixin.SMainWindow):
             filter = ';;'.join(filters)
         )
         # determine the correct filename (note that avatars don't use the suffix)
-        destination = state.appdata + 'avatars/' + hash + '.' + sourcefile.split('.')[-1]
+        destination = state.appdata + 'avatars/' + avatarHash + '.' + sourcefile.split('.')[-1]
         exists = QtCore.QFile.exists(destination)
         if sourcefile == '':
             # ask for removal of avatar
@@ -3764,7 +3740,7 @@ class MyForm(settingsmixin.SMainWindow):
                             self, 'Message', displayMsg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
             else:
                 overwrite = QtGui.QMessageBox.No
-            
+
         # copy the image file to the appdata folder
         if (not exists) | (overwrite == QtGui.QMessageBox.Yes):
             if overwrite == QtGui.QMessageBox.Yes:
@@ -3993,7 +3969,7 @@ class MyForm(settingsmixin.SMainWindow):
         # "All accounts" can't be renamed
         if item.type == AccountMixin.ALL:
             return
-        
+
         newLabel = unicode(item.text(0), 'utf-8', 'ignore')
         oldLabel = item.defaultLabel()
 
@@ -4064,7 +4040,7 @@ class MyForm(settingsmixin.SMainWindow):
         self.rerenderMessagelistFromLabels()
         self.rerenderMessagelistToLabels()
         completerList = self.ui.lineEditTo.completer().model().stringList()
-        for i in range(len(completerList)):
+        for i, _ in enumerate(completerList):
             if unicode(completerList[i]).endswith(" <" + item.address + ">"):
                 completerList[i] = item.label + " <" + item.address + ">"
         self.ui.lineEditTo.completer().model().setStringList(completerList)
@@ -4084,7 +4060,7 @@ class MyForm(settingsmixin.SMainWindow):
         self.rerenderAddressBook()
 
     def updateStatusBar(self, data):
-        if type(data) is tuple or type(data) is list:
+        if isinstance(data, (tuple, list)):
             option = data[1]
             message = data[0]
         else:
@@ -4136,7 +4112,7 @@ class settingsDialog(QtGui.QDialog):
             BMConfigParser().safeGetBoolean('bitmessagesettings', 'useidenticons'))
         self.ui.checkBoxReplyBelow.setChecked(
             BMConfigParser().safeGetBoolean('bitmessagesettings', 'replybelow'))
-        
+
         if state.appdata == paths.lookupExeFolder():
             self.ui.checkBoxPortableMode.setChecked(True)
         else:
@@ -4261,25 +4237,6 @@ class settingsDialog(QtGui.QDialog):
             BMConfigParser().get('bitmessagesettings', 'stopresendingafterxdays')))
         self.ui.lineEditMonths.setText(str(
             BMConfigParser().get('bitmessagesettings', 'stopresendingafterxmonths')))
-        
-        
-        #'System' tab removed for now.
-        """try:
-            maxCores = BMConfigParser().getint('bitmessagesettings', 'maxcores')
-        except:
-            maxCores = 99999
-        if maxCores <= 1:
-            self.ui.comboBoxMaxCores.setCurrentIndex(0)
-        elif maxCores == 2:
-            self.ui.comboBoxMaxCores.setCurrentIndex(1)
-        elif maxCores <= 4:
-            self.ui.comboBoxMaxCores.setCurrentIndex(2)
-        elif maxCores <= 8:
-            self.ui.comboBoxMaxCores.setCurrentIndex(3)
-        elif maxCores <= 16:
-            self.ui.comboBoxMaxCores.setCurrentIndex(4)
-        else:
-            self.ui.comboBoxMaxCores.setCurrentIndex(5)"""
 
         QtGui.QWidget.resize(self, QtGui.QWidget.sizeHint(self))
 
@@ -4313,7 +4270,7 @@ class settingsDialog(QtGui.QDialog):
     def namecoinTypeChanged(self, checked):
         nmctype = self.getNamecoinType()
         assert nmctype == "namecoind" or nmctype == "nmcontrol"
-            
+
         isNamecoind = (nmctype == "namecoind")
         self.ui.lineEditNamecoinUser.setEnabled(isNamecoind)
         self.ui.labelNamecoinUser.setEnabled(isNamecoind)
@@ -4371,20 +4328,20 @@ class MySingleApplication(QtGui.QApplication):
 
     def __init__(self, *argv):
         super(MySingleApplication, self).__init__(*argv)
-        id = MySingleApplication.uuid
+        _id = MySingleApplication.uuid
 
         self.server = None
         self.is_running = False
 
         socket = QLocalSocket()
-        socket.connectToServer(id)
+        socket.connectToServer(_id)
         self.is_running = socket.waitForConnected()
 
         # Cleanup past crashed servers
         if not self.is_running:
             if socket.error() == QLocalSocket.ConnectionRefusedError:
                 socket.disconnectFromServer()
-                QLocalServer.removeServer(id)
+                QLocalServer.removeServer(_id)
 
         socket.abort()
 
@@ -4396,7 +4353,7 @@ class MySingleApplication(QtGui.QApplication):
             # Nope, create a local server with this id and assign on_new_connection
             # for whenever a second instance tries to run focus the application.
             self.server = QLocalServer()
-            self.server.listen(id)
+            self.server.listen(_id)
             self.server.newConnection.connect(self.on_new_connection)
 
     def __del__(self):
@@ -4437,7 +4394,7 @@ def run():
 #            myapp.showMigrationWizard(BMConfigParser().get('bitmessagesettings', 'mailchuck'))
 #    except:
 #        myapp.showMigrationWizard(0)
-    
+
     # only show after wizards and connect dialogs have completed
     if not BMConfigParser().getboolean('bitmessagesettings', 'startintray'):
         myapp.show()
