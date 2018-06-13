@@ -243,23 +243,20 @@ if prereqs:
 OPSYS = detectOS()
 CMD = PACKAGE_MANAGER[OPSYS] if OPSYS in PACKAGE_MANAGER else 'UNKNOWN_INSTALLER'
 for lhs, rhs in EXTRAS_REQUIRE.items():
-    if rhs and any([
-        EXTRAS_REQUIRE_DEPS[x][OPSYS]
-        for x in rhs
-        if x in EXTRAS_REQUIRE_DEPS
-    ]):
-        rhs_cmd = ''.join([
-            CMD,
-            ' ',
-            ' '.join([
-                ''. join([
-                    xx for xx in EXTRAS_REQUIRE_DEPS[x][OPSYS]
-                ])
-                for x in rhs
-                if x in EXTRAS_REQUIRE_DEPS
-            ]),
-        ])
-        print "Optional dependency `pip install .[{}]` would require `{}` to be run as root".format(lhs, rhs_cmd)
+    if rhs:
+        process_rhs = False
+        for rhs_item in rhs:
+            if rhs_item in EXTRAS_REQUIRE_DEPS:
+                if EXTRAS_REQUIRE_DEPS[rhs_item][OPSYS]:
+                    process_rhs = True
+        if process_rhs:
+            packages = []
+            for rhs_item in rhs:
+                if rhs_item in EXTRAS_REQUIRE_DEPS:
+                    packages.extend(EXTRAS_REQUIRE_DEPS[rhs_item][OPSYS])
+            packages_str = ' '.join(packages)
+            rhs_cmd = ' '.join([CMD, packages_str])
+            print("Optional dependency `pip install .[{}]` would require `{}` to be run as root".format(lhs, rhs_cmd))
 
 if (not compiler or prereqs) and detectOS() in PACKAGE_MANAGER:
     print "You can install the missing dependencies by running, as root:"

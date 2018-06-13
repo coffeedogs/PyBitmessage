@@ -82,9 +82,8 @@ if __name__ == "__main__":
         "a P2P communications protocol",
         long_description=README,
         license='MIT',
-        # TODO: add author info
-        #author='',
-        #author_email='',
+        author='The Bitmessage Team',
+        author_email='',
         url='https://bitmessage.org',
         # TODO: add keywords
         #keywords='',
@@ -117,26 +116,19 @@ if __name__ == "__main__":
         zip_safe=False,
         entry_points={
             'bitmessage.gui.menu': [
-                'address.qrcode = pybitmessage.plugins.menu_qrcode [qrcode]'
+                'address.qrcode = pybitmessage.plugins.menu_qrcode [qrcode]',
             ],
             'bitmessage.notification.message': [
-                'notify2 = pybitmessage.plugins.notification_notify2'
-                '[gir, notify2]'
+                'notify2 = pybitmessage.plugins.notification_notify2 [gir, notify2]',
             ],
             'bitmessage.notification.sound': [
                 'theme.canberra = pybitmessage.plugins.sound_canberra',
-                'file.gstreamer = pybitmessage.plugins.sound_gstreamer'
-                '[gir]',
-                'file.fallback = pybitmessage.plugins.sound_playfile'
-                '[sound]'
+                'file.gstreamer = pybitmessage.plugins.sound_gstreamer [gir]',
+                'file.fallback = pybitmessage.plugins.sound_playfile [sound]',
             ],
             'bitmessage.indicator': [
-                'libmessaging ='
-                'pybitmessage.plugins.indicator_libmessaging [gir]'
+                'libmessaging = pybitmessage.plugins.indicator_libmessaging [gir]',
             ],
-            # 'console_scripts': [
-            #        'pybitmessage = pybitmessage.bitmessagemain:main'
-            # ]
         },
         scripts=['src/pybitmessage'],
         cmdclass={'install': InstallCmd}
